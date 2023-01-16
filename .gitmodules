@@ -1,0 +1,15 @@
+[submodule "market-cart-service"]
+	path = market-cart-service
+	url = https://github.com/TiFeGo/market-cart-service.git
+
+[submodule "market-user-service"]
+        path = market-user-service
+	url = https://github.com/TiFeGo/market-user-service.git
+
+[submodule "market-product-service"]
+        path = market-product-service
+	url = https://github.com/TiFeGo/market-product-service.git
+
+[submodule "market-delivery-service"]
+        path = market-delivery-service
+        url = https://github.com/TiFeGo/market-delivery-service.git
