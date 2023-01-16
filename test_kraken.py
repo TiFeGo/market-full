@@ -1,6 +1,5 @@
 import requests
 import pytest
-import pydantic
 import json
 import random
 
