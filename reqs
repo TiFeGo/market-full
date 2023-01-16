@@ -1,0 +1,57 @@
+works
+curl -X 'GET' \
+  'http://192.168.0.111:8080/v1/products/?skip=0&limit=10' \
+  -H 'accept: application/json'
+
+method not allowed
+curl -X 'POST' \
+  'http://192.168.0.111:8080/v1/products/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "string",
+  "amount": 0
+}'
+
+works
+curl -X 'POST' \
+  'http://192.168.0.111:8080/v1/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=&username=user%40example.com&password=string&scope=&client_id=&client_secret='
+
+
+curl -X 'POST' \
+  'http://192.168.0.111:8080/v1/users/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "string",
+  "email": "user1@example.com",
+  "password": "string"
+}'
+
+
+works
+curl -X 'POST' \
+  'http://192.168.0.111:8080/v1/cart/add' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "user_id": 1,
+  "product_uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "amount": 10
+}'
+
+curl -X 'GET' \
+  'http://192.168.0.111:8080/v1/cart/1' \
+  -H 'accept: application/json'
+
+works
+curl -X 'POST' \
+  'http://192.168.0.111:8080/v1/cart/confirm?user_id=1' \
+  -H 'accept: application/json' \
+  -d ''
+
+
+

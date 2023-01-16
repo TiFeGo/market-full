@@ -1,0 +1,219 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "output_encoding": "json",
+  "extra_config": {
+    "router": {
+      "return_error_msg": true
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/v1/products/",
+      "method": "GET",
+      "output_encoding": "json",
+      "input_query_strings": [
+        "skip",
+        "limit"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/products/",
+          "encoding": "safejson",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://product_service:8000"
+          ],
+          "is_collection": true,
+          "mapping": {
+            "collection": "products"
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/v1/products/add",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/products/",
+          "encoding": "safejson",
+          "sd": "static",
+          "method": "POST",
+          "host": [
+            "http://product_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "validation/json-schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "amount"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/login",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/login",
+          "encoding": "safejson",
+          "host": [
+            "http://user_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "auth/signer": {
+          "alg": "HS256",
+          "jwk_local_path": "jwk_private_key.json",
+          "keys_to_sign": [
+            "access_token"
+          ],
+          "disable_jwk_security": true,
+          "full": false,
+          "kid": "sim2"
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/users/",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/users/",
+          "encoding": "safejson",
+          "host": [
+            "http://user_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "validation/json-schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "password"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/cart",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/cart/",
+          "encoding": "safejson",
+          "host": [
+            "http://cart_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "HS256",
+          "roles": ["user", "admin"],
+          "roles_key": "roles",
+          "jwk_local_path": "jwk_private_key.json",
+          "disable_jwk_security": true,
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/cart/add",
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/cart/add",
+          "encoding": "safejson",
+          "host": [
+            "http://cart_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "validation/json-schema": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "product_uuid",
+            "amount"
+          ],
+          "properties": {
+            "user_id": {
+              "type": "number"
+            },
+            "product_uuid": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            }
+          }
+        },
+        "auth/validator": {
+          "alg": "HS256",
+          "roles": ["user", "admin"],
+          "roles_key": "roles",
+          "jwk_local_path": "jwk_private_key.json",
+          "disable_jwk_security": true,
+          "operation_debug": true
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/cart/confirm",
+      "input_query_strings": [
+        "user_id"
+      ],
+      "method": "POST",
+      "backend": [
+        {
+          "url_pattern": "/cart/confirm",
+          "encoding": "safejson",
+          "host": [
+            "http://cart_service:8000"
+          ]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "HS256",
+          "roles": ["user", "admin"],
+          "roles_key": "roles",
+          "jwk_local_path": "jwk_private_key.json",
+          "disable_jwk_security": true,
+          "operation_debug": true
+        }
+      }
+    }
+  ]
+}
