@@ -1,2 +1,4 @@
 apps
 *.swp
+/venv
+__py*

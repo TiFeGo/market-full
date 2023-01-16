@@ -16,7 +16,7 @@ def headers():
 def user():
     return {
         'name': 'user',
-        'email': 'user@example.com',
+        'email': 'user1@example.com',
         'password': 'string'
     }
 
@@ -35,7 +35,7 @@ def credentials(user):
 
 @pytest.fixture
 def url():
-    return 'http://local:8080/v1'
+    return 'http://localhost:8080/v1'
 
 
 def test_get_all_products(headers, url):
@@ -57,8 +57,8 @@ def test_register_new_user(headers, user, url):
     response = requests.post(f'{url}/users/', headers=headers, json=user)
     data = json.loads(response.content.decode())
     assert response.status_code == 200
-    assert data['name'] == json_data['name']
-    assert data['email'] == json_data['email']
+    assert data['name'] == user['name']
+    assert data['email'] == user['email']
     assert data['id']
 
 

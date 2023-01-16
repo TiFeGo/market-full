@@ -1,0 +1,139 @@
+version: '3.9'
+volumes:
+  cart_volume:
+  delivery_volume:
+  product_volume:
+  user_volume:
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  cart_service:
+    container_name: ns-cart-service
+    build: ./market-cart-service
+    ports:
+      - "8003:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+
+  cart_mongodb:
+    container_name: mob-mongo
+    image: mongo:4.4.6
+    volumes:
+      - cart_volume:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+
+  delivery_service:
+    build: ./market-delivery-service
+    container_name: ns-delivery-service
+    restart: always    
+    ports:
+      - "8004:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  delivery_mongodb:
+    container_name: delivery-mongo
+    image: mongo:4.4.6
+    volumes:
+      - delivery_volume:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+
+  product_service:
+    container_name: ns-product-service
+    build:
+      dockerfile: Dockerfile
+      context: ./market-product-service
+    command: sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"   
+    ports:
+      - '8001:8000'
+    depends_on:
+      product_db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: product_db
+      DATABASE_PORT: 5432
+
+  product_db:
+    image: postgres
+    restart: always
+    container_name: ns-product-db
+    env_file:
+      - .env
+    volumes:
+      - product_volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user_service:
+    container_name: ns-user-service
+    build:
+      dockerfile: Dockerfile
+      context: ./market-user-service
+    command: sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - '8002:8000'
+    depends_on:
+      user_db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: user_db
+      DATABASE_PORT: 5432
+      JWT_SECRETE: jwt_secrete
+
+  user_db:
+    image: postgres
+    restart: always
+    container_name: ns-user-db
+    volumes:
+      - user_volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: ecommerce
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api_gateway:
+    image: devopsfaith/krakend:watch
+    container_name: api_gateway
+    volumes:
+      - ./config/krakenD:/etc/krakend
+    ports:
+      - "8080:8080"
+    command: [ "run", "-d", "-c", "/etc/krakend/krakend.json" ]
+    depends_on:
+      - product_service
+      - user_service
+      - delivery_service
+      - cart_service
+    environment:
+      - JWT_SECRETE=jwt_secrete
